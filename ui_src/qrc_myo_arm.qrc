@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="myo">
+    <file>images/bracelet_myo.PNG</file>
+  </qresource>
+  <qresource prefix="gesture">
+    <file>images/gesture_fist.png</file>
+    <file>images/gesture_fist_on.png</file>
+    <file>images/gesture_spread.png</file>
+    <file>images/gesture_spread_on.png</file>
+    <file>images/gesture_wave_in.png</file>
+    <file>images/gesture_wave_in_on.png</file>
+    <file>images/gesture_wave_out.png</file>
+    <file>images/gesture_wave_out_on.png</file>
+  </qresource>
+</RCC>
