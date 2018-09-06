@@ -57,7 +57,7 @@ class MainWindow(QtGui.QMainWindow, ihm.Ui_MainWindow):
 
     """
 
-    def __init__(self, listener):
+    def __init__(self):
         super(MainWindow, self).__init__()
         # définition de tous les attributs
         self.p_gyro1 = None
@@ -85,7 +85,6 @@ class MainWindow(QtGui.QMainWindow, ihm.Ui_MainWindow):
         self.data = None
         self.data_tot = None
         # Create the main window
-        self.listener = listener  # est un objet d'écoute du myo arm
         self.setupUi(self)  # lance le montage des objets graphiques
         self.nb_value = 1000  # nombre de valeurs EMG sur le graph
         # chemin d'enregistrement des données
@@ -144,6 +143,13 @@ class MainWindow(QtGui.QMainWindow, ihm.Ui_MainWindow):
         """
         lance un timer toutes les 20ms pour récupérer les données
         """
+        # permet de charger la librairie du myo
+        myo.init(sdk_path=os.path.join(os.getcwd(),
+                                       'myo-sdk-win-0.9.0'))
+        # connection à un myo
+        self.hub = myo.Hub()
+        # connection à une classe en écoute du myo
+        self.listener = my_myo_arm_band.MyListener()
         self.startTimer(0.02)
 
     def init_plot(self):
@@ -294,6 +300,7 @@ class MainWindow(QtGui.QMainWindow, ihm.Ui_MainWindow):
         méthode appelée toutes les 20ms
         pour récupérer les données et quelques informations
         """
+        self.hub.run(self.listener.on_event, 20)
         self.listener.device.request_rssi()  # force du signal bluetooth
         self.read_imu_paquet()  # dernières données acquises
         self.maj_plot()  # mise à jour des tracés
@@ -370,6 +377,7 @@ class MainWindow(QtGui.QMainWindow, ihm.Ui_MainWindow):
                                              QtGui.QMessageBox.No))
         if result == QtGui.QMessageBox.Yes:
             # permet d'ajouter du code pour fermer proprement
+            self.hub.stop()
             self.enregistrement()
             event.accept()
 
@@ -380,20 +388,9 @@ class MainWindow(QtGui.QMainWindow, ihm.Ui_MainWindow):
 # Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     import sys
-    # permet de charger la librairie du myo
-    myo.init(sdk_path=os.path.join(os.getcwd(),
-                                   'myo-sdk-win-0.9.0'))
-    # connection à un myo
-    HUB = myo.Hub()
-    # connection à une classe en écoute du myo
-    LISTENER = my_myo_arm_band.MyListener()
-    # tant que le myo est en écoute
-    with HUB.run_in_background(LISTENER.on_event):
-        # on laisse l'application graphique tournée
-        WIN = MainWindow(LISTENER)
-        if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-            QtGui.QApplication.instance().exec_()
-            HUB.stop()
+    WIN = MainWindow()
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
     # attention, l'utilisation de la méthode hub.run oblige un appel à chaque
     # fois que l'on souhaite récupérer des données
     # run_in_background lance dans un thread à part la communication
